@@ -6,6 +6,57 @@ helpers.validCoordinates = function(board, distanceFromTop, distanceFromLeft) {
       distanceFromTop > board.lengthOfSide - 1 || distanceFromLeft > board.lengthOfSide - 1));
 };
 
+helpers.getTileNearHero = function(gameData, direction) {
+  return helpers.getTileNearby(gameData.board, gameData.activeHero.distanceFromTop, gameData.activeHero.distanceFromLeft, direction);
+}
+
+helpers.willMoveResultInAdjacentEnemies = function(gameData, direction) {
+  console.log("WMR");
+  var myHero = gameData.activeHero;
+  var team = myHero.team;
+
+  var resultingTile = helpers.getTileNearHero(gameData, direction);
+
+  console.log("RESULTING TILE", resultingTile);
+
+  var enemyCheck = function(tile) {
+    console.log("TILE", tile)
+    if (tile && tile.type === "Hero" && tile.team !== team) {
+      return true;
+    }
+    return false;
+  }
+
+  if (resultingTile) {
+    // Check the tile itself
+    if (enemyCheck(resultingTile)) {
+      return true;
+    }
+
+    /**
+     * Scan around the title as shown below in array index notation
+     *      [1][2][3]
+     *      [0] X [4]
+     *      [7][6][5]
+     */
+    var xDeltas = [-1, -1, 0, 1, 1, 1, 0, -1];
+    var yDeltas = [0, -1, -1, -1, 0, 1, 1, 1];
+
+    for (var step = 0; step < xDeltas.length; ++step) {
+      var distanceFromLeft = myHero.distanceFromLeft + xDeltas[step];
+      var distanceFromTop = myHero.distanceFromTop + yDeltas[step];
+
+      var validCoordinates = helpers.validCoordinates(gameData.board, distanceFromTop, distanceFromLeft);
+
+      if (validCoordinates && enemyCheck(gameData.board.tiles[distanceFromTop][distanceFromLeft])) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 // Returns the tile [direction] (North, South, East, or West) of the given X/Y coordinate
 helpers.getTileNearby = function(board, distanceFromTop, distanceFromLeft, direction) {
 
